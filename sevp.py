@@ -5,31 +5,47 @@
 
 import cryptography
 import socket
+import struct
 
 SERVER_HOST = 'localhost'
 SERVER_PORT = 50008
 
+RECORD_FMT = "!12s"     # A single 12-byte string in network byte order (big-endian)
+RECORD_SIZE = struct.calcsize(RECORD_FMT)
+
 def connect_to_server(): 
-    """Iniciar uma conexão TCP com o servidor."""
+    """Inicie uma conexão TCP com o servidor."""
     pass
 
 def check_certificate():
-    """Validar o certificado recebido do servidor."""
+    """Valide o certificado recebido do servidor."""
     pass
 
 def close_connection(conn):
-    """Encerrar conexão."""
+    """Encerre a conexão."""
     conn.shutdown(socket.SHUT_RDWR)
     conn.close()
 
 def handle_client(conn, addr):
-    """Tratar de uma conexão (client) em particular."""
+    """Trate de uma conexão (client) em particular."""
     while True:
-        data = conn.recv(1024)
-        if not data: 
-            print('Bye', addr) 
+        record = conn.recv(RECORD_SIZE)
+        if not record:
+            print('Bye', addr)
             break
+        data = dissect_record(record)
         # reverse the given string
-        data = data[::-1]
-        conn.sendall(data)
+        data = data[0][::-1]
+
+        record = build_record(data)
+        conn.send(record)
     close_connection(conn)
+
+def build_record(data):
+    """Crie um record para ser enviado através do socket."""
+    return struct.pack(RECORD_FMT, data)
+
+def dissect_record(record):
+    """Desempacote os campos de um record."""
+    data = struct.unpack(RECORD_FMT, record)
+    return data

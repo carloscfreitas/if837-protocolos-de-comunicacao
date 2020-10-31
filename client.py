@@ -1,16 +1,17 @@
-import sevp
+from sevp import *
 import socket
 
 def main():
-    with socket.create_connection(
-        (sevp.SERVER_HOST, sevp.SERVER_PORT)) as s:
+    with socket.create_connection((SERVER_HOST, SERVER_PORT)) as s:
         while True:
-            s.sendall(b'Hello, world')
+            record = build_record(b'Hello, world')
+            s.send(record)
 
-            data = s.recv(1024)
+            record = s.recv(RECORD_SIZE)
+            data = dissect_record(record)
             print('Received', repr(data))
 
-            ans = input('\nDo you want to continue? [Y/n] ') 
+            ans = input('\nDo you want to continue? [y/N] ') 
             if ans == 'y':
                 continue
             else: 
