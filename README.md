@@ -20,7 +20,7 @@ Este módulo fornece suporte ao protocolo de segurança SEVP para sistemas eletr
 connect_to_server()
 ```
 
-Iniciar uma conexão TCP com o servidor.
+Inicie uma conexão TCP com o servidor.
 
 <a name="sevp.check_certificate"></a>
 #### check\_certificate
@@ -29,7 +29,7 @@ Iniciar uma conexão TCP com o servidor.
 check_certificate()
 ```
 
-Validar o certificado recebido do servidor.
+Valide o certificado recebido do servidor.
 
 <a name="sevp.close_connection"></a>
 #### close\_connection
@@ -38,7 +38,7 @@ Validar o certificado recebido do servidor.
 close_connection(conn)
 ```
 
-Encerrar conexão.
+Encerre a conexão.
 
 <a name="sevp.handle_client"></a>
 #### handle\_client
@@ -47,7 +47,7 @@ Encerrar conexão.
 handle_client(conn, addr)
 ```
 
-Tratar de uma conexão (client) em particular.
+Trate de uma conexão (client) em particular.
 
 <a name="sevp.build_record"></a>
 #### build\_record
@@ -56,7 +56,7 @@ Tratar de uma conexão (client) em particular.
 build_record(data)
 ```
 
-Criar um record para ser enviado através do socket.
+Crie um record para ser enviado através do socket.
 
 <a name="sevp.dissect_record"></a>
 #### dissect\_record
@@ -65,5 +65,5 @@ Criar um record para ser enviado através do socket.
 dissect_record(record)
 ```
 
-Desempacotar os campos de um record.
+Desempacote os campos de um record.
 
