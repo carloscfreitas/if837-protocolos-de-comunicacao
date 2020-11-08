@@ -1,4 +1,4 @@
-# Secure Eletronic Voting Protocol
+# Secure Electronic Voting Protocol
 
 """Este módulo fornece suporte ao protocolo de segurança SEVP para sistemas eletrônicos de votação.
 """
@@ -25,21 +25,6 @@ def close_connection(conn):
     """Encerre a conexão."""
     conn.shutdown(socket.SHUT_RDWR)
     conn.close()
-
-def handle_client(conn, addr):
-    """Trate de uma conexão (client) em particular."""
-    while True:
-        record = conn.recv(RECORD_SIZE)
-        if not record:
-            print('Bye', addr)
-            break
-        data = dissect_record(record)
-        # reverse the given string
-        data = data[0][::-1]
-
-        record = build_record(data)
-        conn.send(record)
-    close_connection(conn)
 
 def build_record(data):
     """Crie um record para ser enviado através do socket."""
