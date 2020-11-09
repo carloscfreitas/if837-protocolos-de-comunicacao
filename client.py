@@ -8,8 +8,9 @@ def main():
         conn.validate_certificate(cert)
         print(cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME))
 
-        ans = input('\nDo you want to continue? [y/N] ') 
+        ans = input('\nDo you want to send your public key? [y/N] ') 
         if ans == 'y':
+            conn.send_client_public_key()
             continue
         else:
             break

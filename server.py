@@ -1,4 +1,5 @@
 from sevp import *
+import pprint
 import _thread
 
 def handle_incoming_conn(conn, addr):
@@ -8,6 +9,14 @@ def handle_incoming_conn(conn, addr):
             print('Bye', addr)
             break
         conn.send_certificate()
+
+        record_key = conn.receive_record()
+        if not record_key:
+            print('Bye', addr)
+            break
+        client_key = dissect_record(record_key)
+        pprint.pprint(client_key)
+
     conn.close_connection()
 
 def main():
