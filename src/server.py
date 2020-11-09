@@ -2,19 +2,13 @@ from sevp import *
 import socket
 import _thread
 
-def handle_client(conn, addr):
-    """Trate de uma conexão (client) em particular."""
+def handle_incoming_conn(conn, addr):
     while True:
         record = conn.recv(RECORD_SIZE)
         if not record:
             print('Bye', addr)
             break
-        data = dissect_record(record)
-        # reverse the given string
-        data = data[0][::-1]
-
-        record = build_record(data)
-        conn.send(record)
+        send_certificate(conn)
     close_connection(conn)
 
 def main():
@@ -22,7 +16,7 @@ def main():
     while True:
         conn, addr = server.accept()
         print('Connected by', addr)
-        _thread.start_new_thread(handle_client, (conn, addr))
+        _thread.start_new_thread(handle_incoming_conn, (conn, addr))
 
 if __name__ == "__main__":
     main()
