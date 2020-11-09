@@ -11,11 +11,11 @@ key = rsa.generate_private_key(
     key_size=2048,
 )
 # Write our key to disk for safe keeping
-with open("certs/key.pem", "wb") as f:
+with open("certs/server_key.pem", "wb") as f:
     f.write(key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.BestAvailableEncryption(b"passphrase"),
+        encryption_algorithm=serialization.BestAvailableEncryption(b"server"),
     ))
 
 # Various details about who we are. For a self-signed certificate the
@@ -24,8 +24,8 @@ subject = issuer = x509.Name([
     x509.NameAttribute(NameOID.COUNTRY_NAME, u"BR"),
     x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"Pernambuco"),
     x509.NameAttribute(NameOID.LOCALITY_NAME, u"Recife"),
-    x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"Elections, Inc."),
-    x509.NameAttribute(NameOID.COMMON_NAME, u"electronic-voting.com"),
+    x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"Elections Inc."),
+    x509.NameAttribute(NameOID.COMMON_NAME, u"electronicvoting.com"),
 ])
 cert = x509.CertificateBuilder().subject_name(
     subject

@@ -1,20 +1,19 @@
 from sevp import *
-import socket
 import _thread
 
 def handle_incoming_conn(conn, addr):
     while True:
-        record = conn.recv(RECORD_SIZE)
+        record = conn.receive_record()
         if not record:
             print('Bye', addr)
             break
-        send_certificate(conn)
-    close_connection(conn)
+        conn.send_certificate()
+    conn.close_connection()
 
 def main():
-    server = socket.create_server((SERVER_HOST, SERVER_PORT))
+    server = init_server()
     while True:
-        conn, addr = server.accept()
+        conn, addr = server.accept_incoming_conn()
         print('Connected by', addr)
         _thread.start_new_thread(handle_incoming_conn, (conn, addr))
 
