@@ -1,16 +1,16 @@
-from cryptography.x509.oid import NameOID
 from sevp import *
 
 def main():
     conn = connect_to_server()
     while True:
-        cert = conn.request_server_cert()
-        conn.validate_certificate(cert)
-        print(cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME))
+        cert = conn.get_server_cert()
+        conn.check_certificate(cert)
+        print(cert)
 
-        ans = input('\nDo you want to send your public key? [y/N] ') 
-        if ans == 'y':
-            conn.send_client_public_key()
+        conn.send_client_public_key()
+
+        ans = input('\nDo you want to repeat? [y/N] ') 
+        if ans == 'y':    
             continue
         else:
             break

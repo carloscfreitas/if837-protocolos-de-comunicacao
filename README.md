@@ -8,12 +8,13 @@
   * [SEVPSocket](#sevp.SEVPSocket)
     * [\_\_init\_\_](#sevp.SEVPSocket.__init__)
     * [accept\_incoming\_conn](#sevp.SEVPSocket.accept_incoming_conn)
-    * [send\_certificate](#sevp.SEVPSocket.send_certificate)
+    * [send\_server\_cert](#sevp.SEVPSocket.send_server_cert)
     * [close\_connection](#sevp.SEVPSocket.close_connection)
-    * [receive\_record](#sevp.SEVPSocket.receive_record)
-    * [request\_server\_cert](#sevp.SEVPSocket.request_server_cert)
-    * [validate\_certificate](#sevp.SEVPSocket.validate_certificate)
+    * [get\_server\_cert](#sevp.SEVPSocket.get_server_cert)
+    * [rcv\_client\_hello](#sevp.SEVPSocket.rcv_client_hello)
+    * [check\_certificate](#sevp.SEVPSocket.check_certificate)
     * [send\_client\_public\_key](#sevp.SEVPSocket.send_client_public_key)
+    * [rcv\_client\_public\_key](#sevp.SEVPSocket.rcv_client_public_key)
 
 <a name="sevp"></a>
 # sevp
@@ -27,7 +28,7 @@ Este módulo fornece suporte ao protocolo de segurança SEVP para sistemas eletr
 init_server()
 ```
 
-Inicializa o servidor e retorna a instância SEVPSocket correspondente.
+Inicializa o servidor e retorna uma instância de SEVPSocket.
 
 <a name="sevp.connect_to_server"></a>
 #### connect\_to\_server
@@ -36,7 +37,7 @@ Inicializa o servidor e retorna a instância SEVPSocket correspondente.
 connect_to_server()
 ```
 
-Faz uma tentativa de conexão TCP com o servidor e retorna a instância SEVPSocket correspondente.
+Faz uma tentativa de conexão TCP com o servidor e retorna um instância de SEVPSocket.
 
 <a name="sevp.build_record"></a>
 #### build\_record
@@ -81,11 +82,11 @@ Inicializa o objeto com o socket passado no contrutor da classe.
 
 Habilita o servidor para aceitar uma conexão de chegada.
 
-<a name="sevp.SEVPSocket.send_certificate"></a>
-#### send\_certificate
+<a name="sevp.SEVPSocket.send_server_cert"></a>
+#### send\_server\_cert
 
 ```python
- | send_certificate()
+ | send_server_cert()
 ```
 
 Efetua o envio do certificado do servidor.
@@ -97,31 +98,31 @@ Efetua o envio do certificado do servidor.
  | close_connection()
 ```
 
-Encerra a atual conexão.
+Encerra a conexão atual.
 
-<a name="sevp.SEVPSocket.receive_record"></a>
-#### receive\_record
+<a name="sevp.SEVPSocket.get_server_cert"></a>
+#### get\_server\_cert
 
 ```python
- | receive_record(size=RECORD_SIZE)
+ | get_server_cert()
 ```
 
-Aguarda recebimento de um record e o retorna.
+Solicita o certificado ao servidor e retorna uma instância de Certificate.
 
-<a name="sevp.SEVPSocket.request_server_cert"></a>
-#### request\_server\_cert
+<a name="sevp.SEVPSocket.rcv_client_hello"></a>
+#### rcv\_client\_hello
 
 ```python
- | request_server_cert()
+ | rcv_client_hello()
 ```
 
-Solicita ao servidor o envio do seu sertificado.
+Recebe a mensagem "client hello" e retorna os dados da mensagem.
 
-<a name="sevp.SEVPSocket.validate_certificate"></a>
-#### validate\_certificate
+<a name="sevp.SEVPSocket.check_certificate"></a>
+#### check\_certificate
 
 ```python
- | validate_certificate(cert)
+ | check_certificate(cert)
 ```
 
 Valida o certificado passado no argumento.
@@ -134,4 +135,13 @@ Valida o certificado passado no argumento.
 ```
 
 Envia a chave pública do cliente.
+
+<a name="sevp.SEVPSocket.rcv_client_public_key"></a>
+#### rcv\_client\_public\_key
+
+```python
+ | rcv_client_public_key()
+```
+
+Recebe a chave pública do cliente e retorna uma instância de RSAPublicKey.
 

@@ -1,21 +1,16 @@
 from sevp import *
-import pprint
 import _thread
 
 def handle_incoming_conn(conn, addr):
     while True:
-        record = conn.receive_record()
-        if not record:
+        data = conn.rcv_client_hello()
+        if not data:
             print('Bye', addr)
             break
-        conn.send_certificate()
 
-        record_key = conn.receive_record()
-        if not record_key:
-            print('Bye', addr)
-            break
-        client_key = dissect_record(record_key)
-        pprint.pprint(client_key)
+        conn.send_server_cert()
+        client_key = conn.rcv_client_public_key()
+        print(client_key)
 
     conn.close_connection()
 
