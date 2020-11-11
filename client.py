@@ -10,6 +10,9 @@ def main():
     print(csock.server_pub_key)
 
     csock.send_client_public_key()
+    
+    message = csock.rcv_secret_key()
+    print(message)
 
 if __name__ == "__main__":
     main()

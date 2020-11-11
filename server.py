@@ -9,6 +9,9 @@ def handle_incoming_conn(ssock, addr):
     ssock.rcv_client_public_key()
     print(ssock.client_pub_key)
     
+    ssock.send_secret_key()
+    print(ssock.secret_key)
+
     print('Bye', addr)
     ssock.close_connection()
 

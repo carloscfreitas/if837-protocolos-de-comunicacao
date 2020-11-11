@@ -5,9 +5,10 @@
 
 from cryptography import x509
 from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.x509.oid import NameOID
+import os
 import socket
 import struct
 
@@ -75,6 +76,28 @@ class SEVPSocket():
         record = self.socket.recv(RECORD_SIZE)
         return dissect_record(record)
 
+    def send_encrypted_msn(self, message, public_key):
+        ciphertext = public_key.encrypt(
+            message,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+        self.send_data(ciphertext)
+
+    def rcv_encrypted_msn(self, private_key):
+        ciphertext = self.receive_data()
+        return private_key.decrypt(
+            ciphertext,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+
     def close_connection(self):
         """Encerra a conexão atual."""
         self.socket.shutdown(socket.SHUT_RDWR)
@@ -87,6 +110,7 @@ class ClientSocket(SEVPSocket):
         self.server_pub_key = None
         self.client_prv_key = load_private_key(CLIENT_PVT_KEY_PATH, CLIENT_PVT_KEY_PWD)
         self.client_pub_key = self.client_prv_key.public_key()
+        self.secret_key = None
 
     def get_server_cert(self):
         """Solicita o certificado ao servidor e retorna uma instância de Certificate."""
@@ -122,6 +146,10 @@ class ClientSocket(SEVPSocket):
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
         self.send_data(pem)
+    
+    def rcv_secret_key(self):
+        self.secret_key = super().rcv_encrypted_msn(self.client_prv_key)
+        return self.secret_key
 
 class ServerSocket(SEVPSocket):
     def __init__(self, socket):
@@ -130,6 +158,7 @@ class ServerSocket(SEVPSocket):
         self.server_pub_key = self.server_cert.public_key()
         self.server_prv_key = load_private_key(SERVER_PVT_KEY_PATH, SERVER_PVT_KEY_PWD)
         self.client_pub_key = None
+        self.secret_key = None
     
     def accept_incoming_conn(self):
         """Habilita o servidor para aceitar uma conexão de chegada."""
@@ -150,3 +179,7 @@ class ServerSocket(SEVPSocket):
         key_data = self.receive_data()
         self.client_pub_key = serialization.load_pem_public_key(key_data)
         return self.client_pub_key
+    
+    def send_secret_key(self):
+        self.secret_key = os.urandom(32)
+        super().send_encrypted_msn(self.secret_key, self.client_pub_key)
