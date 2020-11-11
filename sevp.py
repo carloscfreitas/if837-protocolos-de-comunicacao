@@ -24,15 +24,19 @@ RECORD_SIZE = struct.calcsize(RECORD_FMT)
 
 CERT_COMMON_NAME = 'electronicvoting.com'
 
-def init_server():
-    """Inicializa o servidor e retorna uma instância de SEVPSocket."""
-    server = socket.create_server((SERVER_HOST, SERVER_PORT))
-    return SEVPSocket(server)
+CLIENT_PVT_KEY_PATH = "certs/client_key.pem"
+SERVER_PVT_KEY_PATH = "certs/server_key.pem"
+SERVER_CERT_PATH = "certs/certificate.pem"
+
+def start_server():
+    """Inicializa o servidor e retorna uma instância de ServerSocket."""
+    sock = socket.create_server((SERVER_HOST, SERVER_PORT))
+    return ServerSocket(sock)
 
 def connect_to_server():
-    """Faz uma tentativa de conexão TCP com o servidor e retorna um instância de SEVPSocket."""
-    ssock = socket.create_connection((SERVER_HOST, SERVER_PORT))
-    return SEVPSocket(ssock)
+    """Faz uma tentativa de conexão TCP com o servidor e retorna um instância de ClientSocket."""
+    sock = socket.create_connection((SERVER_HOST, SERVER_PORT))
+    return ClientSocket(sock)
 
 def build_record(data):
     """Empacota dados num record SEVP para ser enviado pelo socket e retorna o record."""
@@ -49,47 +53,37 @@ def dissect_record(record):
 class SEVPSocket():
     def __init__(self, socket):
         """Inicializa o objeto com o socket passado no contrutor da classe."""
-        self.__socket = socket
+        self.socket = socket
     
-    def accept_incoming_conn(self):
-        """Habilita o servidor para aceitar uma conexão de chegada."""
-        conn, addr = self.__socket.accept()
-        return SEVPSocket(conn), addr
+    def send_data(self, data):
+        """Constrói um record a partir de dados e envia ele pelo socket."""
+        record = build_record(data)
+        self.socket.sendall(record)
 
-    def send_server_cert(self):
-        """Efetua o envio do certificado do servidor."""
-        with open("certs/certificate.pem", "rb") as cert_file:
-            self.__send_data(cert_file.read())
+    def receive_data(self):
+        """Recebe um record pelo socket, desempacota o record e retorna os dados."""
+        record = self.socket.recv(RECORD_SIZE)
+        return dissect_record(record)
 
     def close_connection(self):
         """Encerra a conexão atual."""
-        self.__socket.shutdown(socket.SHUT_RDWR)
-        self.__socket.close()
-    
-    def __send_data(self, data):
-        """Constrói um record a partir de dados e envia ele."""
-        record = build_record(data)
-        self.__socket.sendall(record)
-    
-    def __receive_data(self):
-        """Recebe um record, desempacota ele e retorna os dados."""
-        record = self.__socket.recv(RECORD_SIZE)
-        return dissect_record(record)
+        self.socket.shutdown(socket.SHUT_RDWR)
+        self.socket.close()
+
+class ClientSocket(SEVPSocket):
+    def __init__(self, socket):
+        super().__init__(socket)
+        self.server_cert = None
+        self.server_pub_key = None
+        self.client_pub_key = None
+        self.client_prv_key = None
 
     def get_server_cert(self):
         """Solicita o certificado ao servidor e retorna uma instância de Certificate."""
-        self.__send_data(b'Client Hello')
-        cert_data = self.__receive_data()
+        self.send_data(b'Client Hello')
+        cert_data = self.receive_data()
         return x509.load_pem_x509_certificate(cert_data)
-
-    def rcv_client_hello(self):
-        """Recebe a mensagem "client hello" e retorna os dados da mensagem."""
-        # TODO Rewrite this method
-        record = self.__socket.recv(RECORD_SIZE)
-        if not record:
-            return None
-        return dissect_record(record)
-
+    
     def check_certificate(self, cert):
         """Valida o certificado passado no argumento."""
         common_name = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
@@ -111,7 +105,7 @@ class SEVPSocket():
 
     def send_client_public_key(self):
         """Envia a chave pública do cliente."""
-        with open("certs/client_key.pem", "rb") as key_file:
+        with open(CLIENT_PVT_KEY_PATH, "rb") as key_file:
             private_key = serialization.load_pem_private_key(
                 key_file.read(),
                 password=b"client",
@@ -122,9 +116,32 @@ class SEVPSocket():
                encoding=serialization.Encoding.PEM,
                format=serialization.PublicFormat.SubjectPublicKeyInfo
             )
-            self.__send_data(pem)
+            self.send_data(pem)
+
+class ServerSocket(SEVPSocket):
+    def __init__(self, socket):
+        super().__init__(socket)
+        self.server_cert = None
+        self.server_pub_key = None
+        self.server_prv_key = None
+        self.client_pub_key = None
+    
+    def accept_incoming_conn(self):
+        """Habilita o servidor para aceitar uma conexão de chegada."""
+        conn, addr = self.socket.accept()
+        return ServerSocket(conn), addr
+
+    def send_server_cert(self):
+        """Efetua o envio do certificado do servidor."""
+        with open(SERVER_CERT_PATH, "rb") as cert_file:
+            self.send_data(cert_file.read())
+
+    def rcv_client_hello(self):
+        """Recebe a mensagem "client hello" e retorna os dados da mensagem."""
+        return self.receive_data()
     
     def rcv_client_public_key(self):
         """Recebe a chave pública do cliente e retorna uma instância de RSAPublicKey."""
-        key_data = self.__receive_data()
-        return serialization.load_pem_public_key(key_data)
+        key_data = self.receive_data()
+        self.client_pub_key = serialization.load_pem_public_key(key_data)
+        return self.client_pub_key

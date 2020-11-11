@@ -1,21 +1,19 @@
 from sevp import *
 import _thread
 
-def handle_incoming_conn(conn, addr):
-    while True:
-        data = conn.rcv_client_hello()
-        if not data:
-            print('Bye', addr)
-            break
+def handle_incoming_conn(server, addr):
+    # TODO Use the data returned to validade the hello message
+    data = server.rcv_client_hello()
 
-        conn.send_server_cert()
-        client_key = conn.rcv_client_public_key()
-        print(client_key)
-
-    conn.close_connection()
+    server.send_server_cert()
+    server.rcv_client_public_key()
+    print(server.client_pub_key)
+    
+    print('Bye', addr)
+    server.close_connection()
 
 def main():
-    server = init_server()
+    server = start_server()
     while True:
         conn, addr = server.accept_incoming_conn()
         print('Connected by', addr)
