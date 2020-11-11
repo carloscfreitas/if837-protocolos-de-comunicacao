@@ -25,7 +25,9 @@ RECORD_SIZE = struct.calcsize(RECORD_FMT)
 CERT_COMMON_NAME = 'electronicvoting.com'
 
 CLIENT_PVT_KEY_PATH = "certs/client_key.pem"
+CLIENT_PVT_KEY_PWD = b"client"
 SERVER_PVT_KEY_PATH = "certs/server_key.pem"
+SERVER_PVT_KEY_PWD = b"server"
 SERVER_CERT_PATH = "certs/certificate.pem"
 
 def start_server():
@@ -49,6 +51,14 @@ def dissect_record(record):
     """Desempacota os campos de um record e retorna o dado em bytes."""
     record_dlc, data = struct.unpack(RECORD_FMT, record)
     return data[:record_dlc]
+
+def load_private_key(path, password):
+    with open(path, "rb") as key_file:
+        return serialization.load_pem_private_key(key_file.read(), password=password)
+
+def load_certificate(path):
+    with open(path, "rb") as cert_file:
+        return x509.load_pem_x509_certificate(cert_file.read())
 
 class SEVPSocket():
     def __init__(self, socket):
@@ -75,14 +85,16 @@ class ClientSocket(SEVPSocket):
         super().__init__(socket)
         self.server_cert = None
         self.server_pub_key = None
-        self.client_pub_key = None
-        self.client_prv_key = None
+        self.client_prv_key = load_private_key(CLIENT_PVT_KEY_PATH, CLIENT_PVT_KEY_PWD)
+        self.client_pub_key = self.client_prv_key.public_key()
 
     def get_server_cert(self):
         """Solicita o certificado ao servidor e retorna uma instância de Certificate."""
         self.send_data(b'Client Hello')
         cert_data = self.receive_data()
-        return x509.load_pem_x509_certificate(cert_data)
+        self.server_cert = x509.load_pem_x509_certificate(cert_data)
+        self.server_pub_key = self.server_cert.public_key()
+        return self.server_cert
     
     def check_certificate(self, cert):
         """Valida o certificado passado no argumento."""
@@ -91,7 +103,7 @@ class ClientSocket(SEVPSocket):
             self.close_connection()
             return False
 
-        issuer_public_key = cert.public_key()
+        issuer_public_key = self.server_pub_key
         try:
             issuer_public_key.verify(
                 cert.signature,
@@ -105,25 +117,18 @@ class ClientSocket(SEVPSocket):
 
     def send_client_public_key(self):
         """Envia a chave pública do cliente."""
-        with open(CLIENT_PVT_KEY_PATH, "rb") as key_file:
-            private_key = serialization.load_pem_private_key(
-                key_file.read(),
-                password=b"client",
-            )
-
-            public_key = private_key.public_key()
-            pem = public_key.public_bytes(
-               encoding=serialization.Encoding.PEM,
-               format=serialization.PublicFormat.SubjectPublicKeyInfo
-            )
-            self.send_data(pem)
+        pem = self.client_pub_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        self.send_data(pem)
 
 class ServerSocket(SEVPSocket):
     def __init__(self, socket):
         super().__init__(socket)
-        self.server_cert = None
-        self.server_pub_key = None
-        self.server_prv_key = None
+        self.server_cert = load_certificate(SERVER_CERT_PATH)
+        self.server_pub_key = self.server_cert.public_key()
+        self.server_prv_key = load_private_key(SERVER_PVT_KEY_PATH, SERVER_PVT_KEY_PWD)
         self.client_pub_key = None
     
     def accept_incoming_conn(self):
@@ -133,8 +138,8 @@ class ServerSocket(SEVPSocket):
 
     def send_server_cert(self):
         """Efetua o envio do certificado do servidor."""
-        with open(SERVER_CERT_PATH, "rb") as cert_file:
-            self.send_data(cert_file.read())
+        cert_data = self.server_cert.public_bytes(serialization.Encoding.PEM)
+        self.send_data(cert_data)
 
     def rcv_client_hello(self):
         """Recebe a mensagem "client hello" e retorna os dados da mensagem."""

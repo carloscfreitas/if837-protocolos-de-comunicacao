@@ -1,13 +1,15 @@
 from sevp import *
 
 def main():
-    conn = connect_to_server()
+    csock = connect_to_server()
 
-    cert = conn.get_server_cert()
-    conn.check_certificate(cert)
-    print(cert)
+    cert = csock.get_server_cert()
+    csock.check_certificate(cert)
+    
+    print(csock.server_cert)
+    print(csock.server_pub_key)
 
-    conn.send_client_public_key()
+    csock.send_client_public_key()
 
 if __name__ == "__main__":
     main()

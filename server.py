@@ -1,21 +1,21 @@
 from sevp import *
 import _thread
 
-def handle_incoming_conn(server, addr):
+def handle_incoming_conn(ssock, addr):
     # TODO Use the data returned to validade the hello message
-    data = server.rcv_client_hello()
+    data = ssock.rcv_client_hello()
 
-    server.send_server_cert()
-    server.rcv_client_public_key()
-    print(server.client_pub_key)
+    ssock.send_server_cert()
+    ssock.rcv_client_public_key()
+    print(ssock.client_pub_key)
     
     print('Bye', addr)
-    server.close_connection()
+    ssock.close_connection()
 
 def main():
-    server = start_server()
+    ssock = start_server()
     while True:
-        conn, addr = server.accept_incoming_conn()
+        conn, addr = ssock.accept_incoming_conn()
         print('Connected by', addr)
         _thread.start_new_thread(handle_incoming_conn, (conn, addr))
 
