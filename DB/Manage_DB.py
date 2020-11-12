@@ -53,6 +53,5 @@ class ManageDB:
             reader.readrow()
         
     
-m = ManageDB('candidates.csv')
+m = ManageDB('menu.csv')
 m.write_headers()
-m.write_file("xxxx","1234")
