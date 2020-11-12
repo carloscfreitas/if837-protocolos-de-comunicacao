@@ -2,8 +2,10 @@ from sevp import *
 import _thread
 
 def handle_incoming_conn(ssock, addr):
-    # TODO Use the data returned to validade the hello message
-    data = ssock.rcv_client_hello()
+    # TODO Extract method "handshake"
+    ### BEGIN OF HANDSHAKE
+    # TODO Use the message returned to validade the "client hello"
+    message = ssock.rcv_client_hello()
 
     ssock.send_server_cert()
     ssock.rcv_client_public_key()
@@ -11,6 +13,7 @@ def handle_incoming_conn(ssock, addr):
     
     ssock.send_secret_key()
     print(ssock.secret_key)
+    ### END OF HANDSHAKE
 
     print('Bye', addr)
     ssock.close_connection()
