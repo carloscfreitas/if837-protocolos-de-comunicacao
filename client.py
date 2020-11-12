@@ -7,15 +7,15 @@ def main():
     ### BEGIN OF HANDSHAKE
     cert = csock.get_server_cert()
     csock.check_certificate(cert)
-    
-    print(csock.server_cert)
-    print(csock.server_pub_key)
-
     csock.send_client_public_key()
-    
-    message = csock.rcv_secret_key()
-    print(message)
+    csock.rcv_secret_key()
     ### END OF HANDSHAKE
+
+    message = csock.rcv_encrypted_msn()
+    print(message.code, message.data)
+
+    csock.send_encrypted_msn(201,
+        b'A message from the Client verified for both integrity and authenticity')
 
 if __name__ == "__main__":
     main()

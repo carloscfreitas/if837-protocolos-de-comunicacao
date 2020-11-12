@@ -128,10 +128,20 @@ class ClientSocket(SEVPSocket):
         self.send_message(Message(data=pem))
     
     def rcv_secret_key(self):
-        message = self.receive_message()
-        message.decrypt(self.client_prv_key)
+        message = self.rcv_encrypted_msn()
         self.secret_key = message.data
         return self.secret_key
+    
+    def send_encrypted_msn(self, code, data):
+        message = Message(data, code, self.secret_key)
+        message.encrypt(self.server_pub_key)
+        self.send_message(message)
+
+    def rcv_encrypted_msn(self):
+        message = self.receive_message()
+        message.decrypt(self.client_prv_key)
+        message.verify(self.secret_key)
+        return message
 
 class ServerSocket(SEVPSocket):
     def __init__(self, socket):
@@ -140,7 +150,7 @@ class ServerSocket(SEVPSocket):
         self.server_pub_key = self.server_cert.public_key()
         self.server_prv_key = load_private_key(SERVER_PVT_KEY_PATH, SERVER_PVT_KEY_PWD)
         self.client_pub_key = None
-        self.secret_key = os.urandom(32)
+        self.secret_key = None
     
     def accept_incoming_conn(self):
         """Habilita o servidor para aceitar uma conexão de chegada."""
@@ -154,6 +164,7 @@ class ServerSocket(SEVPSocket):
 
     def rcv_client_hello(self):
         """Recebe a mensagem "client hello" e retorna os dados da mensagem."""
+        # TODO Use the message returned to validade the "client hello"
         return self.receive_message()
     
     def rcv_client_public_key(self):
@@ -163,9 +174,20 @@ class ServerSocket(SEVPSocket):
         return self.client_pub_key
     
     def send_secret_key(self):
-        message = Message(data=self.secret_key)
+        secret_key = os.urandom(32)
+        self.send_encrypted_msn(2, secret_key)
+        self.secret_key = secret_key
+    
+    def send_encrypted_msn(self, code, data):
+        message = Message(data, code, self.secret_key)
         message.encrypt(self.client_pub_key)
         self.send_message(message)
+    
+    def rcv_encrypted_msn(self):
+        message = self.receive_message()
+        message.decrypt(self.server_prv_key)
+        message.verify(self.secret_key)
+        return message
 
 class Message():
     def __init__(self, data, code=1, mac_key=None):
@@ -175,9 +197,9 @@ class Message():
     
     def mac(self, mac_key):
         mac = None
-        if mac_key:
+        if mac_key and self.data:
             h = hmac.HMAC(mac_key, hashes.SHA256())
-            h.update(data)
+            h.update(self.data)
             mac = h.finalize()
         return mac
 
@@ -205,9 +227,18 @@ class Message():
             )
         )
     
+    def verify(self, mac_key):
+        if mac_key:
+            data, mac = self.separate_data_from_mac()
+            h = hmac.HMAC(mac_key, hashes.SHA256())
+            h.update(data)
+            h.verify(mac)
+            self.data = data
+            self.MAC = mac
+
     def separate_data_from_mac(self):
         # Every byte up to the last 32 bytes
-        data = message[:-32]
+        data = self.data[:-32]
         # Last 32 bytes (digest_size length for SHA256)
-        mac = message[-32:]
+        mac = self.data[-32:]
         return data, mac
