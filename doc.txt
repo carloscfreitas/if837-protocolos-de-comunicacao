@@ -1,0 +1,217 @@
+Help on module sevp:
+
+NAME
+    sevp
+
+DESCRIPTION
+    Este módulo fornece suporte em Python ao protocolo de segurança SEVP
+    para sistemas eletrônicos de votação.
+
+CLASSES
+    builtins.object
+        Message
+        SEVPSocket
+            ClientSocket
+            ServerSocket
+    
+    class ClientSocket(SEVPSocket)
+     |  ClientSocket(socket)
+     |  
+     |  Method resolution order:
+     |      ClientSocket
+     |      SEVPSocket
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, socket)
+     |      Construa um objeto ClientSocket.
+     |  
+     |  check_certificate(self, cert)
+     |      Valide a assinatura e o CN do certificado.
+     |  
+     |  get_server_cert(self)
+     |      Solicite o certificado ao servidor e o retorne como um objeto Certificate.
+     |  
+     |  rcv_encrypted_msn(self)
+     |      Receba dados encriptados, os desencripte e verifique sua integridade e autenticidade.
+     |  
+     |  rcv_secret_key(self)
+     |      Receba a chave secreta para geração do MAC.
+     |  
+     |  send_client_public_key(self)
+     |      Envie a chave pública.
+     |  
+     |  send_encrypted_msn(self, code, data)
+     |      Envie dados encriptados com a chave pública do servidor.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from SEVPSocket:
+     |  
+     |  close_connection(self)
+     |      Feche imediatamente a conexão atual.
+     |  
+     |  receive_message(self)
+     |      Receba um record pelo socket, desempacote o record e retorne um objeto Message.
+     |  
+     |  send_message(self, message)
+     |      Serialize um objeto Message e o envie pelo socket.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from SEVPSocket:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class Message(builtins.object)
+     |  Message(data, code=1, mac_key=None)
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, data, code=1, mac_key=None)
+     |      Construa um objeto Message.
+     |  
+     |  decrypt(self, private_key)
+     |      Desencripte os dados utilizando uma chave.
+     |  
+     |  encrypt(self, public_key)
+     |      Encripte os dados, possivelmente concatenados com o MAC, utilizando uma chave.
+     |  
+     |  mac(self, mac_key)
+     |      Gere o MAC de um dado a partir de uma chave e retorne o MAC.
+     |  
+     |  separate_data_from_mac(self)
+     |      Separe os bytes referentes aos dados (aplicação) dos referentes ao MAC.
+     |  
+     |  verify(self, mac_key)
+     |      Verifique se a mensagem corresponde ao MAC contido nos dados.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class SEVPSocket(builtins.object)
+     |  SEVPSocket(socket)
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, socket)
+     |      Construa um objeto SEVPSocket.
+     |  
+     |  close_connection(self)
+     |      Feche imediatamente a conexão atual.
+     |  
+     |  receive_message(self)
+     |      Receba um record pelo socket, desempacote o record e retorne um objeto Message.
+     |  
+     |  send_message(self, message)
+     |      Serialize um objeto Message e o envie pelo socket.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class ServerSocket(SEVPSocket)
+     |  ServerSocket(socket)
+     |  
+     |  Method resolution order:
+     |      ServerSocket
+     |      SEVPSocket
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, socket)
+     |      Construa um objeto ServerSocket.
+     |  
+     |  accept_incoming_conn(self)
+     |      Habilite o servidor para aceitar uma conexão de chegada e retorne
+     |      uma tupla (ServerSocket, endereço).
+     |  
+     |  rcv_client_hello(self)
+     |      Receba a mensagem "client hello" e retorne um objeto Message.
+     |  
+     |  rcv_client_public_key(self)
+     |      Recebe a chave pública do cliente e retorna uma instância de RSAPublicKey.
+     |  
+     |  rcv_encrypted_msn(self)
+     |      Receba dados encriptados, os desencripte e verifique sua integridade e autenticidade.
+     |  
+     |  send_encrypted_msn(self, code, data)
+     |      Envie dados encriptados com a chave pública do cliente.
+     |  
+     |  send_secret_key(self)
+     |      Gere uma chave secreta para geração de MAC e a envie.
+     |  
+     |  send_server_cert(self)
+     |      Efetue o envio do certificado.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from SEVPSocket:
+     |  
+     |  close_connection(self)
+     |      Feche imediatamente a conexão atual.
+     |  
+     |  receive_message(self)
+     |      Receba um record pelo socket, desempacote o record e retorne um objeto Message.
+     |  
+     |  send_message(self, message)
+     |      Serialize um objeto Message e o envie pelo socket.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from SEVPSocket:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+
+FUNCTIONS
+    build_record(message)
+        Empacote um objeto Message num record SEVP e retorne o record.
+    
+    connect_to_server()
+        Faça uma conexão TCP com o servidor e retorne um objeto ClientSocket.
+    
+    dissect_record(record)
+        Desempacote os campos de um record e retorne uma instância de Message.
+    
+    load_certificate(path)
+        Carregue um certificado em memória e retorne um objeto Certificate.
+    
+    load_private_key(path, password)
+        Carregue em memória uma chave privada e retorne um objeto RSAPrivateKey.
+    
+    start_server()
+        Inicialize o servidor e retorne um objeto ServerSocket.
+
+DATA
+    CERT_COMMON_NAME = 'electronicvoting.com'
+    CLIENT_PVT_KEY_PATH = 'certs/client_key.pem'
+    CLIENT_PVT_KEY_PWD = b'client'
+    RECORD_FMT = '!BH2048s'
+    RECORD_SIZE = 2051
+    SERVER_CERT_PATH = 'certs/certificate.pem'
+    SERVER_HOST = 'localhost'
+    SERVER_PORT = 50008
+    SERVER_PVT_KEY_PATH = 'certs/server_key.pem'
+    SERVER_PVT_KEY_PWD = b'server'
+
+FILE
+    /home/cfreitas/documents/graduation/if837-protocolos-de-comunicacao/sevp.py
+
+

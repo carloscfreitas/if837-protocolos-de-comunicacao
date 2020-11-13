@@ -11,7 +11,7 @@ def handle_incoming_conn(ssock, addr):
     ### END OF HANDSHAKE
 
     ssock.send_encrypted_msn(200,
-        b'A message from the Server verified for both integrity and authenticity')
+        b'A message from the Server verified for both integrity and authenticity\nAnother line...')
 
     message = ssock.rcv_encrypted_msn()
     print(message.code, message.data)

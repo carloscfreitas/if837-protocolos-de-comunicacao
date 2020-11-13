@@ -1,6 +1,7 @@
 # Secure Electronic Voting Protocol (SEVP)
 
-"""Este módulo fornece suporte ao protocolo de segurança SEVP para sistemas eletrônicos de votação.
+"""Este módulo fornece suporte em Python ao protocolo de segurança SEVP
+para sistemas eletrônicos de votação.
 """
 
 from cryptography import x509
@@ -33,58 +34,58 @@ SERVER_PVT_KEY_PWD = b"server"
 SERVER_CERT_PATH = "certs/certificate.pem"
 
 def start_server():
-    """Inicializa o servidor e retorna uma instância de ServerSocket."""
+    """Inicialize o servidor e retorne um objeto ServerSocket."""
     sock = socket.create_server((SERVER_HOST, SERVER_PORT))
     return ServerSocket(sock)
 
 def connect_to_server():
-    """Faz uma tentativa de conexão TCP com o servidor e retorna um instância de ClientSocket."""
+    """Faça uma conexão TCP com o servidor e retorne um objeto ClientSocket."""
     sock = socket.create_connection((SERVER_HOST, SERVER_PORT))
     return ClientSocket(sock)
 
 def build_record(message):
-    """Empacota dados num record SEVP para ser enviado pelo socket e retorna o record."""
-    data = message.data
-    record_dlc = len(data)
-    # # Left justified version of the data
-    # data = data.ljust(2048, b'\x00')
-    return struct.pack(RECORD_FMT, message.code, record_dlc, data)
+    """Empacote um objeto Message num record SEVP e retorne o record."""
+    record_dlc = len(message.data)
+    return struct.pack(RECORD_FMT, message.code, record_dlc, message.data)
 
 def dissect_record(record):
-    """Desempacota os campos de um record e retorna o dado em bytes."""
+    """Desempacote os campos de um record e retorne uma instância de Message."""
     code, record_dlc, data = struct.unpack(RECORD_FMT, record)
     return Message(data=data[:record_dlc], code=code)
 
 def load_private_key(path, password):
+    """Carregue em memória uma chave privada e retorne um objeto RSAPrivateKey."""
     with open(path, "rb") as key_file:
         return serialization.load_pem_private_key(key_file.read(), password=password)
 
 def load_certificate(path):
+    """Carregue um certificado em memória e retorne um objeto Certificate."""
     with open(path, "rb") as cert_file:
         return x509.load_pem_x509_certificate(cert_file.read())
 
 class SEVPSocket():
     def __init__(self, socket):
-        """Inicializa o objeto com o socket passado no contrutor da classe."""
+        """Construa um objeto SEVPSocket."""
         self.socket = socket
     
     def send_message(self, message):
-        """Constrói um record a partir de dados e envia ele pelo socket."""
+        """Serialize um objeto Message e o envie pelo socket."""
         record = build_record(message)
         self.socket.sendall(record)
 
     def receive_message(self):
-        """Recebe um record pelo socket, desempacota o record e retorna os dados."""
+        """Receba um record pelo socket, desempacote o record e retorne um objeto Message."""
         record = self.socket.recv(RECORD_SIZE)
         return dissect_record(record)
 
     def close_connection(self):
-        """Encerra a conexão atual."""
+        """Feche imediatamente a conexão atual."""
         self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
 
 class ClientSocket(SEVPSocket):
     def __init__(self, socket):
+        """Construa um objeto ClientSocket."""
         super().__init__(socket)
         self.server_cert = None
         self.server_pub_key = None
@@ -93,7 +94,7 @@ class ClientSocket(SEVPSocket):
         self.secret_key = None
 
     def get_server_cert(self):
-        """Solicita o certificado ao servidor e retorna uma instância de Certificate."""
+        """Solicite o certificado ao servidor e o retorne como um objeto Certificate."""
         self.send_message(Message(data=b'Client Hello'))
         message = self.receive_message()
         self.server_cert = x509.load_pem_x509_certificate(message.data)
@@ -101,7 +102,7 @@ class ClientSocket(SEVPSocket):
         return self.server_cert
     
     def check_certificate(self, cert):
-        """Valida o certificado passado no argumento."""
+        """Valide a assinatura e o CN do certificado."""
         common_name = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
         if common_name != CERT_COMMON_NAME:
             self.close_connection()
@@ -120,7 +121,7 @@ class ClientSocket(SEVPSocket):
             self.close_connection()
 
     def send_client_public_key(self):
-        """Envia a chave pública do cliente."""
+        """Envie a chave pública."""
         pem = self.client_pub_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
@@ -128,16 +129,19 @@ class ClientSocket(SEVPSocket):
         self.send_message(Message(data=pem))
     
     def rcv_secret_key(self):
+        """Receba a chave secreta para geração do MAC."""
         message = self.rcv_encrypted_msn()
         self.secret_key = message.data
         return self.secret_key
     
     def send_encrypted_msn(self, code, data):
+        """Envie dados encriptados com a chave pública do servidor."""
         message = Message(data, code, self.secret_key)
         message.encrypt(self.server_pub_key)
         self.send_message(message)
 
     def rcv_encrypted_msn(self):
+        """Receba dados encriptados, os desencripte e verifique sua integridade e autenticidade."""
         message = self.receive_message()
         message.decrypt(self.client_prv_key)
         message.verify(self.secret_key)
@@ -145,6 +149,7 @@ class ClientSocket(SEVPSocket):
 
 class ServerSocket(SEVPSocket):
     def __init__(self, socket):
+        """Construa um objeto ServerSocket."""
         super().__init__(socket)
         self.server_cert = load_certificate(SERVER_CERT_PATH)
         self.server_pub_key = self.server_cert.public_key()
@@ -153,18 +158,18 @@ class ServerSocket(SEVPSocket):
         self.secret_key = None
     
     def accept_incoming_conn(self):
-        """Habilita o servidor para aceitar uma conexão de chegada."""
+        """Habilite o servidor para aceitar uma conexão de chegada e retorne
+        uma tupla (ServerSocket, endereço)."""
         conn, addr = self.socket.accept()
         return ServerSocket(conn), addr
 
     def send_server_cert(self):
-        """Efetua o envio do certificado do servidor."""
+        """Efetue o envio do certificado."""
         cert_data = self.server_cert.public_bytes(serialization.Encoding.PEM)
         self.send_message(Message(data=cert_data))
 
     def rcv_client_hello(self):
-        """Recebe a mensagem "client hello" e retorna os dados da mensagem."""
-        # TODO Use the message returned to validade the "client hello"
+        """Receba a mensagem "client hello" e retorne um objeto Message."""
         return self.receive_message()
     
     def rcv_client_public_key(self):
@@ -174,16 +179,19 @@ class ServerSocket(SEVPSocket):
         return self.client_pub_key
     
     def send_secret_key(self):
+        """Gere uma chave secreta para geração de MAC e a envie."""
         secret_key = os.urandom(32)
         self.send_encrypted_msn(2, secret_key)
         self.secret_key = secret_key
     
     def send_encrypted_msn(self, code, data):
+        """Envie dados encriptados com a chave pública do cliente."""
         message = Message(data, code, self.secret_key)
         message.encrypt(self.client_pub_key)
         self.send_message(message)
     
     def rcv_encrypted_msn(self):
+        """Receba dados encriptados, os desencripte e verifique sua integridade e autenticidade."""
         message = self.receive_message()
         message.decrypt(self.server_prv_key)
         message.verify(self.secret_key)
@@ -191,11 +199,13 @@ class ServerSocket(SEVPSocket):
 
 class Message():
     def __init__(self, data, code=1, mac_key=None):
+        """Construa um objeto Message."""
         self.code = code
         self.data = data
         self.MAC = self.mac(mac_key)
     
     def mac(self, mac_key):
+        """Gere o MAC de um dado a partir de uma chave e retorne o MAC."""
         mac = None
         if mac_key and self.data:
             h = hmac.HMAC(mac_key, hashes.SHA256())
@@ -204,6 +214,7 @@ class Message():
         return mac
 
     def encrypt(self, public_key):
+        """Encripte os dados, possivelmente concatenados com o MAC, utilizando uma chave."""
         message = self.data
         if self.MAC:
             message = self.data + self.MAC
@@ -218,6 +229,7 @@ class Message():
         )
 
     def decrypt(self, private_key):
+        """Desencripte os dados utilizando uma chave."""
         self.data = private_key.decrypt(
             self.data,
             padding.OAEP(
@@ -228,6 +240,7 @@ class Message():
         )
     
     def verify(self, mac_key):
+        """Verifique se a mensagem corresponde ao MAC contido nos dados."""
         if mac_key:
             data, mac = self.separate_data_from_mac()
             h = hmac.HMAC(mac_key, hashes.SHA256())
@@ -237,6 +250,7 @@ class Message():
             self.MAC = mac
 
     def separate_data_from_mac(self):
+        """Separe os bytes referentes aos dados (aplicação) dos referentes ao MAC."""
         # Every byte up to the last 32 bytes
         data = self.data[:-32]
         # Last 32 bytes (digest_size length for SHA256)
