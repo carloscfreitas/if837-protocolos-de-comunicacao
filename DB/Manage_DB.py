@@ -5,53 +5,50 @@ import csv
 
 class ManageDB:
     def __init__(self,path):
-        """Inicializa um objeto passando o nome do arquivo .csv na variável 'path'
+        """Instância um objeto ManageDB passando o path (arquivo.csv) como argumento.
         """
         self.path = path
-
+        self.fieldnames = self.get_fieldnames()
+    
     def get_fieldnames(self):
-        """Retorna os fieldnames do cabeçalho usados na indexação dos dados nos arquivos.csv
+        """Retorna uma lista contendo os fieldnames do arquivo.csv.
         """
-        if self.path == 'voters.csv':
-            return ['Nome','CPF']
-        elif self.path == 'candidates.csv':
-            return ['Nome','Número']
-        elif self.path == 'results.csv':
-            return ['Nome','Votos']
-        elif self.path == 'menu.csv':
-            return ['Index','Option']
-
-    def write_headers(self):
-        """Escreve o cabeçalho dos arquivos.csv
-        """
-        with open(self.path, 'w', newline ='') as csvfile:
-            fieldnames = self.get_fieldnames()
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-
-    def write_file(self,field0, field1):
-        """Adiciona uma linha no arquivo.csv passando os valores como parâmetros
-        """
-        with open(self.path, 'a', newline ='') as csvfile:
-            fieldnames = self.get_fieldnames()
-
-            writer = csv.DictWriter(csvfile,fieldnames = fieldnames)
-            writer.writerow({fieldnames[0]: field0, fieldnames[1]:field1})
+        with open(self.path,'r') as csv_file:
+            reader = csv.reader(csv_file)
+            for row in reader:
+                return row
 
     def read_file(self):
-        """Lê um arquivo.csv
+        """Lê um arquivo e o imprime na tela.
         """
-        with open(self.path, 'r',newline='')as csvfile:
-            reader = csv.DictReader(csvfile)
-            fieldnames = self.get_fieldnames()
+        with open(self.path,'r') as csv_file:
+            reader = csv.DictReader(csv_file)
             for row in reader:
-                print(row[fieldnames[0]],row[fieldnames[1]])
-    
-    def update_files(self,fieldname,replace):
-        with open(self.path, 'r+',newline='')as csvfile:
-            reader = csv.DictReader(csvfile)
-            reader.readrow()
-        
-    
-m = ManageDB('menu.csv')
-m.write_headers()
+                print (row)
+
+    def write_line(self,dict):
+        """Acrescenta uma linha no arquivo, o argumento(linha) deve ser do tipo Dicionário.
+        """
+        with open(self.path,'a') as csv_file:
+            writer = csv.DictWriter(csv_file,fieldnames=self.fieldnames)
+            writer.writerow(dict)
+
+    def update_line(self,key,dict):
+        """Substitui uma linha do arquivo,os argumentos devem ser um fieldname e um Dicionário respectivamente.
+        """
+        with open(self.path,'r') as csv_file:
+            reader = csv.DictReader(csv_file)
+
+            with open('temp.csv','w') as temp_file:
+                writer = csv.DictWriter(temp_file,fieldnames=self.fieldnames)
+                writer.writeheader()
+                for row in reader:
+                    if row[key] == dict[key]:
+                        writer.writerow(dict)
+                    else:
+                        writer.writerow(row)
+        with open('temp.csv','r') as temp_file:
+            content = temp_file.read()
+            
+            with open(self.path,'w') as csv_file:
+                csv_file.write(content)
