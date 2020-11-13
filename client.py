@@ -2,14 +2,7 @@ from sevp import *
 
 def main():
     csock = connect_to_server()
-
-    # TODO Extract method "handshake"
-    ### BEGIN OF HANDSHAKE
-    cert = csock.get_server_cert()
-    csock.check_certificate(cert)
-    csock.send_client_public_key()
-    csock.rcv_secret_key()
-    ### END OF HANDSHAKE
+    csock.do_handshake()
 
     message = csock.rcv_encrypted_msn()
     print(message.code, message.data.decode('utf-8'))

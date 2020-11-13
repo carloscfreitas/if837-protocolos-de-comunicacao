@@ -14,6 +14,7 @@
     * [close\_connection](#sevp.SEVPSocket.close_connection)
   * [ClientSocket](#sevp.ClientSocket)
     * [\_\_init\_\_](#sevp.ClientSocket.__init__)
+    * [do\_handshake](#sevp.ClientSocket.do_handshake)
     * [get\_server\_cert](#sevp.ClientSocket.get_server_cert)
     * [check\_certificate](#sevp.ClientSocket.check_certificate)
     * [send\_client\_public\_key](#sevp.ClientSocket.send_client_public_key)
@@ -23,6 +24,7 @@
   * [ServerSocket](#sevp.ServerSocket)
     * [\_\_init\_\_](#sevp.ServerSocket.__init__)
     * [accept\_incoming\_conn](#sevp.ServerSocket.accept_incoming_conn)
+    * [do\_handshake](#sevp.ServerSocket.do_handshake)
     * [send\_server\_cert](#sevp.ServerSocket.send_server_cert)
     * [rcv\_client\_hello](#sevp.ServerSocket.rcv_client_hello)
     * [rcv\_client\_public\_key](#sevp.ServerSocket.rcv_client_public_key)
@@ -156,6 +158,15 @@ class ClientSocket(SEVPSocket)
 
 Construa um objeto ClientSocket.
 
+<a name="sevp.ClientSocket.do_handshake"></a>
+#### do\_handshake
+
+```python
+ | do_handshake()
+```
+
+Execute o handshake, estabelecendo uma conexão segura.
+
 <a name="sevp.ClientSocket.get_server_cert"></a>
 #### get\_server\_cert
 
@@ -235,6 +246,15 @@ Construa um objeto ServerSocket.
 
 Habilite o servidor para aceitar uma conexão de chegada e retorne
 uma tupla (ServerSocket, endereço).
+
+<a name="sevp.ServerSocket.do_handshake"></a>
+#### do\_handshake
+
+```python
+ | do_handshake()
+```
+
+Execute o handshake, estabelecendo uma conexão segura.
 
 <a name="sevp.ServerSocket.send_server_cert"></a>
 #### send\_server\_cert

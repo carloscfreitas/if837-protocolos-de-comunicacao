@@ -93,6 +93,13 @@ class ClientSocket(SEVPSocket):
         self.client_pub_key = self.client_prv_key.public_key()
         self.secret_key = None
 
+    def do_handshake(self):
+        """Execute o handshake, estabelecendo uma conexão segura."""
+        cert = self.get_server_cert()
+        self.check_certificate(cert)
+        self.send_client_public_key()
+        self.rcv_secret_key()
+
     def get_server_cert(self):
         """Solicite o certificado ao servidor e o retorne como um objeto Certificate."""
         self.send_message(Message(data=b'Client Hello'))
@@ -162,6 +169,13 @@ class ServerSocket(SEVPSocket):
         uma tupla (ServerSocket, endereço)."""
         conn, addr = self.socket.accept()
         return ServerSocket(conn), addr
+
+    def do_handshake(self):
+        """Execute o handshake, estabelecendo uma conexão segura."""
+        self.rcv_client_hello()
+        self.send_server_cert()
+        self.rcv_client_public_key()
+        self.send_secret_key()
 
     def send_server_cert(self):
         """Efetue o envio do certificado."""

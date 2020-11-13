@@ -30,6 +30,9 @@ CLASSES
      |  check_certificate(self, cert)
      |      Valide a assinatura e o CN do certificado.
      |  
+     |  do_handshake(self)
+     |      Execute o handshake, estabelecendo uma conexão segura.
+     |  
      |  get_server_cert(self)
      |      Solicite o certificado ao servidor e o retorne como um objeto Certificate.
      |  
@@ -140,6 +143,9 @@ CLASSES
      |  accept_incoming_conn(self)
      |      Habilite o servidor para aceitar uma conexão de chegada e retorne
      |      uma tupla (ServerSocket, endereço).
+     |  
+     |  do_handshake(self)
+     |      Execute o handshake, estabelecendo uma conexão segura.
      |  
      |  rcv_client_hello(self)
      |      Receba a mensagem "client hello" e retorne um objeto Message.

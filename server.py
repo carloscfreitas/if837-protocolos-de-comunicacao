@@ -2,13 +2,7 @@ from sevp import *
 import _thread
 
 def handle_incoming_conn(ssock, addr):
-    # TODO Extract method "handshake"
-    ### BEGIN OF HANDSHAKE
-    ssock.rcv_client_hello()
-    ssock.send_server_cert()
-    ssock.rcv_client_public_key()
-    ssock.send_secret_key()
-    ### END OF HANDSHAKE
+    ssock.do_handshake()
 
     ssock.send_encrypted_msn(200,
         b'A message from the Server verified for both integrity and authenticity\nAnother line...')
