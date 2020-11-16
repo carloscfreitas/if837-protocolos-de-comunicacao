@@ -5,7 +5,7 @@
 # --render-toc	Enable the rendering of the TOC in the "markdown" renderer.
 # -v 			Increase log verbosity.
 doc:
-	pydoc-markdown -m sevp -I . --render-toc -v > README.md
+	pydoc-markdown -m sevp -m db -I . --render-toc -v > README.md
 
 # Generate requirement file containing a pinned version of everything that is installed at the moment.
 freeze:

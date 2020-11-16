@@ -3,9 +3,9 @@
 
 import csv
 
-class ManageDB:
+class DB:
     def __init__(self,path):
-        """Instância um objeto ManageDB passando o path (arquivo.csv) como argumento.
+        """Instância um objeto DB passando o path (arquivo.csv) como argumento.
         """
         self.path = path
         self.fieldnames = self.get_fieldnames()

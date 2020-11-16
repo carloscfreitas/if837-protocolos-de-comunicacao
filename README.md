@@ -38,6 +38,13 @@
     * [decrypt](#sevp.Message.decrypt)
     * [verify](#sevp.Message.verify)
     * [separate\_data\_from\_mac](#sevp.Message.separate_data_from_mac)
+* [db](#db)
+  * [DB](#db.DB)
+    * [\_\_init\_\_](#db.DB.__init__)
+    * [get\_fieldnames](#db.DB.get_fieldnames)
+    * [read\_file](#db.DB.read_file)
+    * [write\_line](#db.DB.write_line)
+    * [update\_line](#db.DB.update_line)
 
 <a name="sevp"></a>
 # sevp
@@ -370,4 +377,61 @@ Verifique se a mensagem corresponde ao MAC contido nos dados.
 ```
 
 Separe os bytes referentes aos dados (aplicação) dos referentes ao MAC.
+
+<a name="db"></a>
+# db
+
+Este módulo fornece uma classe com métodos que manipulam o Banco de Dados do servidor.
+
+<a name="db.DB"></a>
+## DB Objects
+
+```python
+class DB()
+```
+
+<a name="db.DB.__init__"></a>
+#### \_\_init\_\_
+
+```python
+ | __init__(path)
+```
+
+Instância um objeto DB passando o path (arquivo.csv) como argumento.
+
+<a name="db.DB.get_fieldnames"></a>
+#### get\_fieldnames
+
+```python
+ | get_fieldnames()
+```
+
+Retorna uma lista contendo os fieldnames do arquivo.csv.
+
+<a name="db.DB.read_file"></a>
+#### read\_file
+
+```python
+ | read_file()
+```
+
+Lê um arquivo e o imprime na tela.
+
+<a name="db.DB.write_line"></a>
+#### write\_line
+
+```python
+ | write_line(dict)
+```
+
+Acrescenta uma linha no arquivo, o argumento(linha) deve ser do tipo Dicionário.
+
+<a name="db.DB.update_line"></a>
+#### update\_line
+
+```python
+ | update_line(key, dict)
+```
+
+Substitui uma linha do arquivo,os argumentos devem ser um fieldname e um Dicionário respectivamente.
 
