@@ -3,6 +3,25 @@
 
 import csv
 
+CANDIDATES_FILE_PATH = 'database/candidates.csv'
+VOTERS_FILE_PATH = 'database/voters.csv'
+
+def is_user_registered(login, password):
+    with open(VOTERS_FILE_PATH, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['login'] == login and row['password'] == password:
+                return True
+    return False
+
+def get_candidates_str():
+    candidates = ''
+    with open(CANDIDATES_FILE_PATH, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            candidates += row['number'] + ' - ' + row['name'] + '\n'
+    return candidates
+
 class DB:
     def __init__(self,path):
         """Instância um objeto DB passando o path (arquivo.csv) como argumento.

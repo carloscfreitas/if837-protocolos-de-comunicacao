@@ -33,6 +33,9 @@ SERVER_PVT_KEY_PATH = "certs/server_key.pem"
 SERVER_PVT_KEY_PWD = b"server"
 SERVER_CERT_PATH = "certs/certificate.pem"
 
+MESSAGE_CODE_PROMPT = 1
+MESSAGE_CODE_END_SESSION = 255
+
 def start_server():
     """Inicialize o servidor e retorne um objeto ServerSocket."""
     sock = socket.create_server((SERVER_HOST, SERVER_PORT))

@@ -5,10 +5,13 @@ def main():
     csock.do_handshake()
 
     message = csock.rcv_encrypted_msn()
-    print(message.code, message.data.decode('utf-8'))
-
-    csock.send_encrypted_msn(201,
-        b'A message from the Client verified for both integrity and authenticity')
+    while message.code != MESSAGE_CODE_END_SESSION:
+        if message.code == MESSAGE_CODE_PROMPT:
+            print(message.data.decode('utf-8'))
+            option = input()
+            csock.send_encrypted_msn(201, option.encode('utf-8'))
+            message = csock.rcv_encrypted_msn()
+    csock.close_connection()
 
 if __name__ == "__main__":
     main()
