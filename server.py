@@ -11,14 +11,21 @@ def handle_incoming_conn(ssock, addr):
     message = ssock.rcv_encrypted_msn()
     credentials = message.data.decode('utf-8')
     login, pwd = credentials.split(',')
-    if is_user_registered(login, pwd):
-        candidates_menu = get_candidates_str()
-        ssock.send_encrypted_msn(MESSAGE_CODE_PROMPT, candidates_menu.encode('utf-8'))
+    while not is_user_registered(login, pwd):
+        ssock.send_encrypted_msn(MESSAGE_CODE_PROMPT,
+            b'Wrong login/password. Please, try entering your credentials again:')
         message = ssock.rcv_encrypted_msn()
-        print(addr, message.data)
+        credentials = message.data.decode('utf-8')
+        login, pwd = credentials.split(',')
+
+    candidates_menu = get_candidates_str()
+    ssock.send_encrypted_msn(MESSAGE_CODE_PROMPT, candidates_menu.encode('utf-8'))
+    message = ssock.rcv_encrypted_msn()
+    print(addr, message.data)
 
     print('Bye', addr)
-    ssock.send_encrypted_msn(MESSAGE_CODE_END_SESSION, b'Bye')
+    ssock.send_encrypted_msn(MESSAGE_CODE_END_SESSION,
+        b'Thank you for your vote! Come back later to check the results.')
     ssock.close_connection()
 
 def main():
